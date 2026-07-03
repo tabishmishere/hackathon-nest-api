@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "architect": {
+      "source": "JavaScript-Mastery-Pro/skills",
+      "sourceType": "github",
+      "skillPath": "skills/architect/SKILL.md",
+      "computedHash": "686bd8b5606ad628da5cceced15b9c5155bff8f1666c7f8d0cd498fdd34dbb3f"
+    }
+  }
+}
