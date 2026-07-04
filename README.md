@@ -118,19 +118,4 @@ $ npm run start:prod
 $ npm run build
 ```
 
----
-
-## 🧪 Testing with Postman
-
-1.  **Register**: Send a `POST` request to `/auth/register` defining the payload (role can be either `"ADMIN"` or `"PARTICIPANT"`).
-2.  **Login**: Send a `POST` request to `/auth/login` to get the `access_token`.
-3.  **Authorize**: Copy the `access_token` and paste it under the **Authorization** tab as a **Bearer Token** for the restricted `/hackathons` requests.
-4.  **Observe Role Guarding**:
-    *   Attempting to `POST`, `PATCH`, or `DELETE` hackathons with a `PARTICIPANT` token returns a `403 Forbidden` response.
-    *   Using an `ADMIN` token returns `201 Created` or `200 OK` responses.
-
----
-
-## 🛡️ License
-
-This project is [MIT licensed](LICENSE).
+---`
