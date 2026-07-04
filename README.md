@@ -1,98 +1,136 @@
 <p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+  <a href="https://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+# Hackathon Nest API
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+A progressive, production-ready backend service built with [NestJS](https://github.com/nestjs/nest) for managing hackathons. This API provides secure user registration, authentication, role-based route protection, and comprehensive CRUD management for hackathons.
 
-## Description
+Designed with modular architecture, strict data validations, and clean RESTful patterns.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+---
 
-## Project setup
+## 🚀 Key Features
+
+*   **Modular Architecture**: Built following NestJS design standards with dedicated, self-contained feature modules.
+*   **Secure Authentication**: JWT-based stateless authentication with password hashing using `bcrypt` and token verification via `Passport.js`.
+*   **Role-Based Access Control (RBAC)**: Custom routing decorators (`@Roles`) and guards (`RolesGuard`) to enforce role-level security (e.g., restricting hackathon creation/modification to `ADMIN` users).
+*   **Data Validation & Filtering**: Global validation pipe leveraging `class-validator` and `class-transformer` to sanitize payloads and strip unregistered properties automatically.
+*   **Robust Date Validation**: Automated business logic constraints verifying that hackathon start dates are in the future and end dates occur after start dates.
+
+---
+
+## 🛠️ Tech Stack
+
+*   **Framework**: [NestJS](https://nestjs.com/) (Node.js framework)
+*   **Language**: TypeScript
+*   **Authentication**: Passport-JWT & Bcrypt
+*   **ORM**: Prisma (Setup ready)
+*   **Validation**: Class-Validator & Class-Transformer
+
+---
+
+## 📁 Directory Structure
+
+```text
+src/
+├── app.module.ts            # Root application module
+├── main.ts                  # Application entry point & configuration
+├── auth/                    # Authentication & Security Module
+│   ├── dto/                 # Authentication Request DTOs
+│   ├── guards/              # JWT & Role Access Control Guards
+│   ├── decorators/          # Custom decorators (RBAC & User extraction)
+│   ├── interfaces/          # User & Role models
+│   ├── jwt.strategy.ts      # Passport JWT validation strategy
+│   ├── auth.service.ts      # Authentication business logic & in-memory state
+│   └── auth.controller.ts   # Registration & Login endpoints
+└── hackathons/              # Hackathons Management Module
+    ├── dto/                 # CRUD Validation schemas
+    ├── interfaces/          # Hackathon model
+    ├── hackathons.service.ts # Hackathon business logic & in-memory state
+    └── hackathons.controller.ts # Rest handlers secured with custom guards
+```
+
+---
+
+## 📝 API Endpoints
+
+### 🔑 Authentication
+
+| Endpoint | Method | Access | Request Body | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `/auth/register` | `POST` | Public | `RegisterDto` (email, password, name, role) | Registers a new user |
+| `/auth/login` | `POST` | Public | `LoginDto` (email, password) | Authenticates a user and returns a JWT |
+
+### 🏆 Hackathons CRUD
+
+| Endpoint | Method | Access | Request Body | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `/hackathons` | `POST` | `ADMIN` | `CreateHackathonDto` | Creates a new hackathon |
+| `/hackathons` | `GET` | Authenticated | None | Retrieves all hackathons |
+| `/hackathons/:id` | `GET` | Authenticated | None | Retrieves details of a specific hackathon |
+| `/hackathons/:id` | `PATCH` | `ADMIN` | `UpdateHackathonDto` | Modifies hackathon details |
+| `/hackathons/:id` | `DELETE` | `ADMIN` | None | Deletes a hackathon |
+
+---
+
+## 💻 Local Setup & Installation
+
+### 1. Clone the repository and install dependencies
 
 ```bash
+$ git clone <repository-url>
+$ cd hackathon-nest-api
 $ npm install
 ```
 
-## Compile and run the project
+### 2. Configure Environment Variables
+
+Create a `.env` file in the root directory and add the configuration parameters (template provided below):
+
+```env
+# Application Settings
+PORT=3000
+
+# Database Configuration (For production Prisma integration)
+DATABASE_URL="postgresql://user:password@localhost:5432/hackathondb?schema=public"
+
+# JWT Secret configuration
+JWT_SECRET="your-development-jwt-secret-key"
+```
+
+### 3. Compile and run the project
 
 ```bash
-# development
+# development mode
 $ npm run start
 
-# watch mode
+# watch mode (recommended for local development)
 $ npm run start:dev
 
 # production mode
 $ npm run start:prod
 ```
 
-## Run tests
+### 4. Build for Production
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+$ npm run build
 ```
 
-## Deployment
+---
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## 🧪 Testing with Postman
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+1.  **Register**: Send a `POST` request to `/auth/register` defining the payload (role can be either `"ADMIN"` or `"PARTICIPANT"`).
+2.  **Login**: Send a `POST` request to `/auth/login` to get the `access_token`.
+3.  **Authorize**: Copy the `access_token` and paste it under the **Authorization** tab as a **Bearer Token** for the restricted `/hackathons` requests.
+4.  **Observe Role Guarding**:
+    *   Attempting to `POST`, `PATCH`, or `DELETE` hackathons with a `PARTICIPANT` token returns a `403 Forbidden` response.
+    *   Using an `ADMIN` token returns `201 Created` or `200 OK` responses.
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+---
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## 🛡️ License
 
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+This project is [MIT licensed](LICENSE).
