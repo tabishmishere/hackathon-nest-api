@@ -1,62 +1,78 @@
 import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { randomUUID } from 'crypto';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { User } from './interfaces/user.interface';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class AuthService {
-  private users: User[] = [];
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly prisma: PrismaService,
+  ) {}
 
-  constructor(private readonly jwtService: JwtService) {}
-
-  async register(registerDto: RegisterDto): Promise<Omit<User, 'passwordHash'>> {
+  async register(registerDto: RegisterDto) {
     const { email, password, name, role } = registerDto;
 
-    const existingUser = this.users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+    // Check if user already exists
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+    });
     if (existingUser) {
       throw new ConflictException('User with this email already exists');
     }
 
+    // Hash the password
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    const newUser: User = {
-      id: randomUUID(),
-      email: email.toLowerCase(),
-      passwordHash,
-      name,
-      role,
-    };
+    // Create user in the database
+    const newUser = await this.prisma.user.create({
+      data: {
+        email: email.toLowerCase(),
+        passwordHash,
+        name,
+        role,
+      },
+      // Select only the fields we want to return (exclude passwordHash)
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        createdAt: true,
+      },
+    });
 
-    this.users.push(newUser);
-
-    // Return user object without the password hash
-    const { passwordHash: _, ...result } = newUser;
-    return result;
+    return newUser;
   }
 
-  async login(loginDto: LoginDto): Promise<{ access_token: string; user: Omit<User, 'passwordHash'> }> {
+  async login(loginDto: LoginDto) {
     const { email, password } = loginDto;
 
-    const user = this.users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+    // Find the user by email
+    const user = await this.prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+    });
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    // Compare passwords
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    // Build JWT payload
     const payload = {
       sub: user.id,
       email: user.email,
       role: user.role,
     };
 
+    // Return token and user info (without passwordHash)
     const { passwordHash: _, ...userWithoutPassword } = user;
 
     return {
