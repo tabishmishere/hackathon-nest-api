@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateHackathonDto } from './dto/create-hackathon.dto';
 import { UpdateHackathonDto } from './dto/update-hackathon.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -40,6 +40,7 @@ export class HackathonsService {
         creator: {
           select: { id: true, name: true, email: true },
         },
+        _count: { select: { registrations: true } },
       },
       orderBy: { startDate: 'asc' },
     });
@@ -52,6 +53,7 @@ export class HackathonsService {
         creator: {
           select: { id: true, name: true, email: true },
         },
+        _count: { select: { registrations: true } },
       },
     });
     if (!hackathon) {
@@ -106,4 +108,83 @@ export class HackathonsService {
     await this.prisma.hackathon.delete({ where: { id } });
     return { message: `Hackathon with ID "${id}" successfully deleted` };
   }
+
+  async join(hackathonId: string, userId: string) {
+    // Verify hackathon exists
+    const hackathon = await this.findOne(hackathonId);
+
+    // Check if user is already registered
+    const existingRegistration = await this.prisma.registration.findUnique({
+      where: {
+        userId_hackathonId: { userId, hackathonId },
+      },
+    });
+    if (existingRegistration) {
+      throw new ConflictException('You are already registered for this hackathon');
+    }
+
+    // Check if max participants limit has been reached
+    const currentCount = await this.prisma.registration.count({
+      where: { hackathonId },
+    });
+    if (currentCount >= hackathon.maxParticipants) {
+      throw new BadRequestException('This hackathon has reached its maximum number of participants');
+    }
+
+    // Create the registration
+    return this.prisma.registration.create({
+      data: {
+        userId,
+        hackathonId,
+      },
+      include: {
+        hackathon: {
+          select: { id: true, title: true, startDate: true, endDate: true },
+        },
+      },
+    });
+  }
+
+  async leave(hackathonId: string, userId: string) {
+    // Verify hackathon exists
+    await this.findOne(hackathonId);
+
+    // Find the registration
+    const registration = await this.prisma.registration.findUnique({
+      where: {
+        userId_hackathonId: { userId, hackathonId },
+      },
+    });
+    if (!registration) {
+      throw new NotFoundException('You are not registered for this hackathon');
+    }
+
+    await this.prisma.registration.delete({
+      where: { id: registration.id },
+    });
+
+    return { message: 'Successfully left the hackathon' };
+  }
+
+  async getParticipants(hackathonId: string) {
+    // Verify hackathon exists
+    await this.findOne(hackathonId);
+
+    const registrations = await this.prisma.registration.findMany({
+      where: { hackathonId },
+      include: {
+        user: {
+          select: { id: true, name: true, email: true, role: true },
+        },
+      },
+      orderBy: { registeredAt: 'asc' },
+    });
+
+    return registrations.map((r) => ({
+      registrationId: r.id,
+      registeredAt: r.registeredAt,
+      ...r.user,
+    }));
+  }
 }
+

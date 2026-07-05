@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -47,4 +47,27 @@ export class HackathonsController {
   async remove(@Param('id') id: string) {
     return this.hackathonsService.remove(id);
   }
+
+  @Post(':id/join')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.PARTICIPANT)
+  @HttpCode(HttpStatus.CREATED)
+  async join(@Param('id') id: string, @GetUser('id') userId: string) {
+    return this.hackathonsService.join(id, userId);
+  }
+
+  @Delete(':id/leave')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.PARTICIPANT)
+  async leave(@Param('id') id: string, @GetUser('id') userId: string) {
+    return this.hackathonsService.leave(id, userId);
+  }
+
+  @Get(':id/participants')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  async getParticipants(@Param('id') id: string) {
+    return this.hackathonsService.getParticipants(id);
+  }
 }
+
